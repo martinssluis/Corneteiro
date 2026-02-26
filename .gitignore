@@ -1,0 +1,41 @@
+# Ambiente virtual
+venv/
+.env/
+
+# Arquivos de ambiente
+.env
+.env.*
+
+# Cache do Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Arquivos de sistema
+.DS_Store
+Thumbs.db
+
+# IDEs
+.vscode/
+.idea/
+
+# Logs
+*.log
+
+# Test coverage
+.coverage
+htmlcov/
+
+# Arquivos temporários
+*.sqlite3
+instance/
+
+# Pytest cache
+.pytest_cache/
+
+# Mypy cache
+.mypy_cache/
+
+# Arquivos do Flask
+instance/
