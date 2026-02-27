@@ -1,0 +1,11 @@
+POSICOES = {
+    1: {"id": 1, "nome": "Goleiro", "abreviacao": "gol"},
+    2: {"id": 2, "nome": "Lateral", "abreviacao": "lat"},
+    3: {"id": 3, "nome": "Zagueiro", "abreviacao": "zag"},
+    4: {"id": 4, "nome": "Meia", "abreviacao": "mei"},
+    5: {"id": 5, "nome": "Atacante", "abreviacao": "ata"},
+    6: {"id": 6, "nome": "Técnico", "abreviacao": "tec"},
+}
+
+def get_posicao(posicao_id: int):
+    return POSICOES.get(posicao_id)
