@@ -1,4 +1,5 @@
 from flask import Blueprint, jsonify, request
+from app.utils.formatadores import anexar_clube_e_posicao
 from app.services.cartola_service import (
     get_mercado_status,
     get_atleta_by_id,
@@ -15,7 +16,11 @@ def market_status():
 def get_atleta(atleta_id):
     atleta = get_atleta_by_id(atleta_id)
     if not atleta:
-        return jsonify({"error": "Atleta não encontrado"}), 404
+        return jsonify({"erro": "Atleta não encontrado"}), 404
+
+    # Unitário: sempre retorna clube e posição
+    atleta = anexar_clube_e_posicao(atleta)
+
     return jsonify(atleta)
 
 @atleta_bp.route("/buscar", methods=["GET"])
@@ -31,6 +36,7 @@ def buscar_por_nome():
     if not resultados:
         return jsonify({"erro": "Nenhum atleta encontrado"}), 404
 
+    # Lista: NÃO enriquecer por padrão (performance)
     return jsonify({
         "termo_busca": nome,
         "quantidade": len(resultados),
