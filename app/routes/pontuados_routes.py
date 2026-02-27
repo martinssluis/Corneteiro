@@ -1,12 +1,13 @@
 from flask import Blueprint, jsonify, request
 from app.services.cartola_parciais_service import get_pontuados, get_pontuados_por_rodada
 from app.services.pontuacao_service import calcular_pontuacao_por_scout
+from app.utils.formatadores import anexar_clube_e_posicao
 
 pontuados_bp = Blueprint("pontuados", __name__)
 
 def _anexar_pontuacao_calculada(data: dict):
     atletas = data.get("atletas", {})
-    for atleta_id_str, atleta in atletas.items():
+    for _, atleta in atletas.items():
         scout = atleta.get("scout", {})
         atleta["pontuacao_calculada"] = calcular_pontuacao_por_scout(scout)
     return data
@@ -16,7 +17,7 @@ def _buscar_atleta_em_pontuados(data: dict, atleta_id: int):
     return atletas.get(str(atleta_id))
 
 
-# Rodada atual (sem número no endpoint da Globo)
+# Rodada atual (LISTA) -> sem clube/posição
 @pontuados_bp.route("/", methods=["GET"])
 def pontuados_rodada_atual():
     calcular = str(request.args.get("calcular", "false")).lower() == "true"
@@ -28,7 +29,7 @@ def pontuados_rodada_atual():
     return jsonify(data)
 
 
-# Rodada específica
+# Rodada específica (LISTA) -> sem clube/posição
 @pontuados_bp.route("/<int:rodada>", methods=["GET"])
 def pontuados_por_rodada(rodada):
     calcular = str(request.args.get("calcular", "false")).lower() == "true"
@@ -40,7 +41,7 @@ def pontuados_por_rodada(rodada):
     return jsonify(data)
 
 
-# Atleta na rodada atual
+# Atleta na rodada atual (UNITÁRIO) -> com clube/posição
 @pontuados_bp.route("/atleta/<int:atleta_id>", methods=["GET"])
 def pontuados_atleta_rodada_atual(atleta_id):
     calcular = str(request.args.get("calcular", "true")).lower() == "true"
@@ -64,10 +65,13 @@ def pontuados_atleta_rodada_atual(atleta_id):
     if calcular:
         resposta["pontuacao_calculada"] = calcular_pontuacao_por_scout(resposta["scout"])
 
+    # Unitário: sempre retorna clube e posição
+    resposta = anexar_clube_e_posicao(resposta)
+
     return jsonify(resposta)
 
 
-# Atleta em rodada específica
+# Atleta em rodada específica (UNITÁRIO) -> com clube/posição
 @pontuados_bp.route("/<int:rodada>/atleta/<int:atleta_id>", methods=["GET"])
 def pontuados_atleta_por_rodada(rodada, atleta_id):
     calcular = str(request.args.get("calcular", "true")).lower() == "true"
@@ -91,5 +95,8 @@ def pontuados_atleta_por_rodada(rodada, atleta_id):
 
     if calcular:
         resposta["pontuacao_calculada"] = calcular_pontuacao_por_scout(resposta["scout"])
+
+    # Unitário: sempre retorna clube e posição
+    resposta = anexar_clube_e_posicao(resposta)
 
     return jsonify(resposta)
