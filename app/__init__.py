@@ -12,11 +12,13 @@ def create_app():
     from .routes.atletas_routers import atleta_bp
     from .routes.pontuados_routes import pontuados_bp
     from .routes.clubes_routes import clubes_bp
+    from .routes.recomendacoes_routes import recomendacoes_bp
 
     app.register_blueprint(mercado_bp, url_prefix="/mercado")
     app.register_blueprint(atleta_bp, url_prefix="/atletas")
     app.register_blueprint(pontuados_bp, url_prefix="/pontuados")
     app.register_blueprint(clubes_bp, url_prefix="/clubes")
+    app.register_blueprint(recomendacoes_bp, url_prefix="/recomendacoes")
 
     @app.errorhandler(requests.exceptions.RequestException)
     def handle_requests_exception(e):
