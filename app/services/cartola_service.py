@@ -60,3 +60,11 @@ def buscar_atletas_por_nome(nome: str, exato: bool = False):
                 resultados.append(atleta)
 
     return resultados
+
+def get_atletas_mercado():
+    base = current_app.config.get("CARTOLA_API_URL", "https://api.cartola.globo.com")
+    url = f"{base}/atletas/mercado"
+
+    resp = requests.get(url, timeout=10)
+    resp.raise_for_status()
+    return resp.json()
