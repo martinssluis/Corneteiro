@@ -1,12 +1,12 @@
 from app.services.cartola_service import get_atletas_mercado
+from app.services.cartola_parciais_service import get_pontuados, get_pontuados_por_rodada
+from app.services.pontuacao_service import calcular_pontuacao_por_scout
+
 
 def recomendacao_custo_beneficio(posicao_id: int | None = None, limite: int = 10) -> dict:
     """
     Recomendação v0:
     indice_custo_beneficio = media_num / preco_num
-
-    Retorno leve (lista/ranking). Sem enriquecer clube/posição aqui por performance.
-    (Se precisar detalhes, o front chama /atletas/<atleta_id>).
     """
     data = get_atletas_mercado()
     atletas = data.get("atletas", [])
@@ -63,4 +63,74 @@ def recomendacao_custo_beneficio(posicao_id: int | None = None, limite: int = 10
         "limite": limite,
         "quantidade": len(recomendacoes),
         "recomendacoes": recomendacoes
+    }
+
+
+def recomendacao_destaques_rodada(
+    rodada: int | None = None,
+    posicao_id: int | None = None,
+    limite: int = 10,
+    ordenar_por: str = "pontuacao_cartola"
+) -> dict:
+    """
+    Recomendação baseada nos destaques da rodada.
+
+    ordenar_por:
+    - pontuacao_cartola
+    - pontuacao_calculada
+    """
+    if rodada is None:
+        data = get_pontuados()
+        rodada_referencia = "atual"
+    else:
+        data = get_pontuados_por_rodada(rodada)
+        rodada_referencia = rodada
+
+    atletas_dict = data.get("atletas", {})
+    atletas_lista = []
+
+    for atleta_id_str, atleta in atletas_dict.items():
+        atleta_id = int(atleta_id_str)
+
+        item = {
+            "atleta_id": atleta_id,
+            "apelido": atleta.get("apelido"),
+            "foto": atleta.get("foto"),
+            "clube_id": atleta.get("clube_id"),
+            "posicao_id": atleta.get("posicao_id"),
+            "entrou_em_campo": atleta.get("entrou_em_campo"),
+            "pontuacao_cartola": atleta.get("pontuacao"),
+            "scout": atleta.get("scout", {})
+        }
+
+        if ordenar_por == "pontuacao_calculada":
+            item["pontuacao_calculada"] = calcular_pontuacao_por_scout(item["scout"])
+
+        atletas_lista.append(item)
+
+    if posicao_id is not None:
+        atletas_lista = [a for a in atletas_lista if a.get("posicao_id") == posicao_id]
+
+    if ordenar_por == "pontuacao_calculada":
+        atletas_lista.sort(
+            key=lambda x: x.get("pontuacao_calculada", 0),
+            reverse=True
+        )
+    else:
+        atletas_lista.sort(
+            key=lambda x: x.get("pontuacao_cartola", 0) or 0,
+            reverse=True
+        )
+
+    limite = max(1, min(int(limite), 50))
+    atletas_lista = atletas_lista[:limite]
+
+    return {
+        "criterio": "destaques_rodada",
+        "rodada": rodada_referencia,
+        "posicao_id": posicao_id,
+        "ordenar_por": ordenar_por,
+        "limite": limite,
+        "quantidade": len(atletas_lista),
+        "recomendacoes": atletas_lista
     }
