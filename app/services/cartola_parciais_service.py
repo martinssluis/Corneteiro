@@ -7,8 +7,8 @@ def get_pontuados():
         raise ValueError("CARTOLA_API_URL não configurada")
 
     url = f"{base}/atletas/pontuados"
-
     resp = requests.get(url, timeout=10)
+
     if resp.status_code == 204:
         return {"atletas": {}}
 
@@ -22,9 +22,9 @@ def get_pontuados_por_rodada(rodada: int):
         raise ValueError("CARTOLA_API_URL não configurada")
 
     url = f"{base}/atletas/pontuados/{rodada}"
-
     resp = requests.get(url, timeout=10)
-    if resp.status_code == 204:
+
+    if resp.status_code in (204, 400, 404):
         return {"rodada": rodada, "atletas": {}}
 
     resp.raise_for_status()
