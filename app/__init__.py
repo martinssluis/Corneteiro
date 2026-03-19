@@ -15,6 +15,7 @@ def create_app():
     from .routes.recomendacoes_routes import recomendacoes_bp
     from .routes.historico_routes import historico_bp
     from .routes.tendencia_routes import tendencia_bp
+    from .routes.docs_routes import docs_bp
 
     app.register_blueprint(mercado_bp, url_prefix="/mercado")
     app.register_blueprint(atleta_bp, url_prefix="/atletas")
@@ -23,6 +24,7 @@ def create_app():
     app.register_blueprint(recomendacoes_bp, url_prefix="/recomendacoes")
     app.register_blueprint(historico_bp, url_prefix="/historico")
     app.register_blueprint(tendencia_bp, url_prefix="/tendencia")
+    app.register_blueprint(docs_bp, url_prefix="/docs")
 
     @app.errorhandler(requests.exceptions.RequestException)
     def handle_requests_exception(e):

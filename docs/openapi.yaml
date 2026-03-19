@@ -1,0 +1,674 @@
+openapi: 3.0.3
+info:
+  title: Corneteiro API
+  version: 1.0.0
+  description: |
+    API para consultar dados do Cartola, analisar atletas, acompanhar pontuacoes
+    e obter recomendacoes de escalação.
+servers:
+  - url: http://localhost:5000
+    description: Ambiente local
+tags:
+  - name: Mercado
+  - name: Atletas
+  - name: Pontuados
+  - name: Clubes
+  - name: Historico
+  - name: Tendencia
+  - name: Recomendacoes
+  - name: Docs
+paths:
+  /docs:
+    get:
+      tags: [Docs]
+      summary: Indice simples de documentacao
+      responses:
+        "200":
+          description: Links para os arquivos de documentacao
+  /docs/openapi.yaml:
+    get:
+      tags: [Docs]
+      summary: Especificacao OpenAPI do projeto
+      responses:
+        "200":
+          description: Arquivo YAML da especificacao OpenAPI
+  /docs/api-endpoints:
+    get:
+      tags: [Docs]
+      summary: Guia textual dos endpoints
+      responses:
+        "200":
+          description: Arquivo Markdown com guia de navegacao da API
+  /mercado/status:
+    get:
+      tags: [Mercado]
+      summary: Retorna o status atual do mercado
+      responses:
+        "200":
+          description: Status do mercado
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+  /atletas/status:
+    get:
+      tags: [Atletas]
+      summary: Replica o status do mercado pelo modulo de atletas
+      responses:
+        "200":
+          description: Status do mercado
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+  /atletas/{atleta_id}:
+    get:
+      tags: [Atletas]
+      summary: Busca um atleta por ID
+      parameters:
+        - in: path
+          name: atleta_id
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Atleta encontrado
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+        "404":
+          $ref: "#/components/responses/ErrorResponse"
+  /atletas/buscar:
+    get:
+      tags: [Atletas]
+      summary: Busca atletas por nome, apelido ou slug
+      parameters:
+        - in: query
+          name: nome
+          required: true
+          schema:
+            type: string
+        - in: query
+          name: exato
+          required: false
+          schema:
+            type: boolean
+            default: false
+      responses:
+        "200":
+          description: Lista de atletas encontrados
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  termo_busca:
+                    type: string
+                  quantidade:
+                    type: integer
+                  atletas:
+                    type: array
+                    items:
+                      type: object
+                      additionalProperties: true
+        "400":
+          $ref: "#/components/responses/ErrorResponse"
+        "404":
+          $ref: "#/components/responses/ErrorResponse"
+  /pontuados:
+    get:
+      tags: [Pontuados]
+      summary: Lista os pontuados da rodada atual
+      parameters:
+        - in: query
+          name: calcular
+          required: false
+          schema:
+            type: boolean
+            default: false
+      responses:
+        "200":
+          description: Lista de pontuados
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+  /pontuados/{rodada}:
+    get:
+      tags: [Pontuados]
+      summary: Lista os pontuados de uma rodada especifica
+      parameters:
+        - in: path
+          name: rodada
+          required: true
+          schema:
+            type: integer
+        - in: query
+          name: calcular
+          required: false
+          schema:
+            type: boolean
+            default: false
+      responses:
+        "200":
+          description: Lista de pontuados da rodada
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+  /pontuados/atleta/{atleta_id}:
+    get:
+      tags: [Pontuados]
+      summary: Busca a pontuacao do atleta na rodada atual
+      parameters:
+        - in: path
+          name: atleta_id
+          required: true
+          schema:
+            type: integer
+        - in: query
+          name: calcular
+          required: false
+          schema:
+            type: boolean
+            default: true
+      responses:
+        "200":
+          description: Pontuacao do atleta na rodada atual
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+        "404":
+          $ref: "#/components/responses/ErrorResponse"
+  /pontuados/{rodada}/atleta/{atleta_id}:
+    get:
+      tags: [Pontuados]
+      summary: Busca a pontuacao do atleta em uma rodada especifica
+      parameters:
+        - in: path
+          name: rodada
+          required: true
+          schema:
+            type: integer
+        - in: path
+          name: atleta_id
+          required: true
+          schema:
+            type: integer
+        - in: query
+          name: calcular
+          required: false
+          schema:
+            type: boolean
+            default: true
+      responses:
+        "200":
+          description: Pontuacao do atleta na rodada especifica
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+        "404":
+          $ref: "#/components/responses/ErrorResponse"
+  /clubes:
+    get:
+      tags: [Clubes]
+      summary: Lista os clubes
+      responses:
+        "200":
+          description: Colecao de clubes
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+  /clubes/{clube_id}:
+    get:
+      tags: [Clubes]
+      summary: Busca um clube por ID
+      parameters:
+        - in: path
+          name: clube_id
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Clube encontrado
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+        "404":
+          $ref: "#/components/responses/ErrorResponse"
+  /clubes/buscar:
+    get:
+      tags: [Clubes]
+      summary: Busca um clube por slug
+      parameters:
+        - in: query
+          name: slug
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Clube encontrado
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+        "400":
+          $ref: "#/components/responses/ErrorResponse"
+        "404":
+          $ref: "#/components/responses/ErrorResponse"
+  /historico/atleta/{atleta_id}:
+    get:
+      tags: [Historico]
+      summary: Retorna o historico recente de um atleta
+      parameters:
+        - in: path
+          name: atleta_id
+          required: true
+          schema:
+            type: integer
+        - in: query
+          name: rodadas
+          required: false
+          schema:
+            type: integer
+            default: 5
+            minimum: 1
+            maximum: 38
+      responses:
+        "200":
+          description: Historico recente do atleta
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HistoricoAtletaResponse"
+        "400":
+          $ref: "#/components/responses/ErrorResponse"
+  /tendencia/atleta/{atleta_id}:
+    get:
+      tags: [Tendencia]
+      summary: Calcula a tendencia de desempenho de um atleta
+      parameters:
+        - in: path
+          name: atleta_id
+          required: true
+          schema:
+            type: integer
+        - in: query
+          name: rodadas
+          required: false
+          schema:
+            type: integer
+            default: 6
+            minimum: 1
+            maximum: 38
+      responses:
+        "200":
+          description: Analise de tendencia
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TendenciaAtletaResponse"
+        "400":
+          $ref: "#/components/responses/ErrorResponse"
+  /recomendacoes:
+    get:
+      tags: [Recomendacoes]
+      summary: Endpoint agregador de recomendacoes
+      parameters:
+        - in: query
+          name: criterio
+          required: true
+          schema:
+            type: string
+            enum: [custo_beneficio, destaques_rodada, misto]
+        - in: query
+          name: posicao_id
+          required: false
+          schema:
+            type: integer
+        - in: query
+          name: limite
+          required: false
+          schema:
+            type: integer
+            default: 10
+            minimum: 1
+            maximum: 50
+        - in: query
+          name: rodadas
+          required: false
+          schema:
+            type: integer
+            default: 5
+            minimum: 1
+            maximum: 38
+        - in: query
+          name: rodada
+          required: false
+          schema:
+            type: integer
+        - in: query
+          name: ordenar_por
+          required: false
+          schema:
+            type: string
+            enum: [pontuacao_cartola, pontuacao_calculada]
+            default: pontuacao_cartola
+      responses:
+        "200":
+          description: Ranking de recomendacoes conforme o criterio informado
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - $ref: "#/components/schemas/RecomendacaoCustoBeneficioResponse"
+                  - $ref: "#/components/schemas/RecomendacaoDestaquesResponse"
+                  - $ref: "#/components/schemas/RecomendacaoMistaResponse"
+        "400":
+          $ref: "#/components/responses/ErrorResponse"
+  /recomendacoes/custo-beneficio:
+    get:
+      tags: [Recomendacoes]
+      summary: Endpoint legado de recomendacao por custo-beneficio
+      parameters:
+        - in: query
+          name: posicao_id
+          required: false
+          schema:
+            type: integer
+        - in: query
+          name: limite
+          required: false
+          schema:
+            type: integer
+            default: 10
+            minimum: 1
+            maximum: 50
+      responses:
+        "200":
+          description: Ranking por custo-beneficio
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RecomendacaoCustoBeneficioResponse"
+        "400":
+          $ref: "#/components/responses/ErrorResponse"
+  /recomendacoes/destaques-rodada:
+    get:
+      tags: [Recomendacoes]
+      summary: Endpoint legado de destaques da rodada
+      parameters:
+        - in: query
+          name: rodada
+          required: false
+          schema:
+            type: integer
+        - in: query
+          name: posicao_id
+          required: false
+          schema:
+            type: integer
+        - in: query
+          name: limite
+          required: false
+          schema:
+            type: integer
+            default: 10
+            minimum: 1
+            maximum: 50
+        - in: query
+          name: ordenar_por
+          required: false
+          schema:
+            type: string
+            enum: [pontuacao_cartola, pontuacao_calculada]
+            default: pontuacao_cartola
+      responses:
+        "200":
+          description: Ranking de destaques da rodada
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RecomendacaoDestaquesResponse"
+        "400":
+          $ref: "#/components/responses/ErrorResponse"
+components:
+  responses:
+    ErrorResponse:
+      description: Resposta de erro
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+  schemas:
+    ErrorResponse:
+      type: object
+      properties:
+        erro:
+          type: string
+        detalhe:
+          type: string
+      required:
+        - erro
+    HistoricoItem:
+      type: object
+      properties:
+        rodada:
+          type: integer
+        pontuacao_cartola:
+          type: number
+          nullable: true
+        pontuacao_calculada:
+          type: number
+          nullable: true
+        scout:
+          type: object
+          additionalProperties: true
+        entrou_em_campo:
+          type: boolean
+          nullable: true
+        clube_id:
+          type: integer
+          nullable: true
+        posicao_id:
+          type: integer
+          nullable: true
+    HistoricoAtletaResponse:
+      type: object
+      properties:
+        atleta_id:
+          type: integer
+        rodadas_analisadas:
+          type: integer
+        historico:
+          type: array
+          items:
+            $ref: "#/components/schemas/HistoricoItem"
+    TendenciaAtletaResponse:
+      type: object
+      properties:
+        atleta_id:
+          type: integer
+        rodadas_consideradas:
+          type: integer
+        partidas_validas:
+          type: integer
+        ultimas_pontuacoes:
+          type: array
+          items:
+            type: number
+        media_bloco_antigo:
+          type: number
+          nullable: true
+        media_bloco_recente:
+          type: number
+          nullable: true
+        variacao:
+          type: number
+          nullable: true
+        tendencia:
+          type: string
+          enum: [alta, queda, estavel, insuficiente]
+    RecomendacaoCustoBeneficioItem:
+      type: object
+      properties:
+        atleta_id:
+          type: integer
+        apelido:
+          type: string
+          nullable: true
+        clube_id:
+          type: integer
+          nullable: true
+        posicao_id:
+          type: integer
+          nullable: true
+        preco_num:
+          type: number
+        media_num:
+          type: number
+        indice_custo_beneficio:
+          type: number
+    RecomendacaoCustoBeneficioResponse:
+      type: object
+      properties:
+        criterio:
+          type: string
+          enum: [custo_beneficio]
+        posicao_id:
+          type: integer
+          nullable: true
+        limite:
+          type: integer
+        quantidade:
+          type: integer
+        recomendacoes:
+          type: array
+          items:
+            $ref: "#/components/schemas/RecomendacaoCustoBeneficioItem"
+    RecomendacaoDestaquesItem:
+      type: object
+      properties:
+        atleta_id:
+          type: integer
+        apelido:
+          type: string
+          nullable: true
+        foto:
+          type: string
+          nullable: true
+        clube_id:
+          type: integer
+          nullable: true
+        posicao_id:
+          type: integer
+          nullable: true
+        entrou_em_campo:
+          type: boolean
+          nullable: true
+        pontuacao_cartola:
+          type: number
+          nullable: true
+        pontuacao_calculada:
+          type: number
+          nullable: true
+        scout:
+          type: object
+          additionalProperties: true
+    RecomendacaoDestaquesResponse:
+      type: object
+      properties:
+        criterio:
+          type: string
+          enum: [destaques_rodada]
+        rodada:
+          oneOf:
+            - type: integer
+            - type: string
+        posicao_id:
+          type: integer
+          nullable: true
+        ordenar_por:
+          type: string
+        limite:
+          type: integer
+        quantidade:
+          type: integer
+        recomendacoes:
+          type: array
+          items:
+            $ref: "#/components/schemas/RecomendacaoDestaquesItem"
+    RecomendacaoMistaItem:
+      type: object
+      properties:
+        atleta_id:
+          type: integer
+        apelido:
+          type: string
+          nullable: true
+        clube_id:
+          type: integer
+          nullable: true
+        posicao_id:
+          type: integer
+          nullable: true
+        preco_num:
+          type: number
+        media_num:
+          type: number
+        partidas_validas:
+          type: integer
+        ultimas_pontuacoes:
+          type: array
+          items:
+            type: number
+        score_fase_recente:
+          type: number
+        score_consistencia:
+          type: number
+        score_custo_beneficio:
+          type: number
+        penalizacao_amostra:
+          type: number
+        score_recomendacao:
+          type: number
+    RecomendacaoMistaResponse:
+      type: object
+      properties:
+        criterio:
+          type: string
+          enum: [misto]
+        perfil:
+          type: string
+          enum: [equilibrado]
+        rodadas:
+          type: integer
+        posicao_id:
+          type: integer
+          nullable: true
+        limite:
+          type: integer
+        quantidade:
+          type: integer
+        recomendacoes:
+          type: array
+          items:
+            $ref: "#/components/schemas/RecomendacaoMistaItem"
