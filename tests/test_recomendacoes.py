@@ -49,8 +49,12 @@ class RecomendacoesServiceTestCase(unittest.TestCase):
 
         with patch.object(recomendacoes_service, "get_atletas_mercado", return_value=atletas), patch.object(
             recomendacoes_service,
+            "_precarregar_cache_historico_misto",
+            return_value=(38, 5, {}),
+        ), patch.object(
+            recomendacoes_service,
             "get_historico_atleta",
-            side_effect=lambda atleta_id, rodadas: historicos[atleta_id],
+            side_effect=lambda atleta_id, rodadas, **kwargs: historicos[atleta_id],
         ):
             resultado = recomendacoes_service.recomendacao_mista(posicao_id=2, limite=10, rodadas=5)
 
@@ -80,6 +84,10 @@ class RecomendacoesServiceTestCase(unittest.TestCase):
 
         with patch.object(recomendacoes_service, "get_atletas_mercado", return_value=atletas), patch.object(
             recomendacoes_service,
+            "_precarregar_cache_historico_misto",
+            return_value=(38, 5, {}),
+        ), patch.object(
+            recomendacoes_service,
             "get_historico_atleta",
             return_value={"historico": [{"entrou_em_campo": False, "pontuacao_calculada": 5.0}]},
         ):
@@ -87,6 +95,19 @@ class RecomendacoesServiceTestCase(unittest.TestCase):
 
         self.assertEqual(resultado["quantidade"], 0)
         self.assertEqual(resultado["recomendacoes"], [])
+
+    def test_precarregar_cache_historico_misto_busca_rodadas_uma_vez(self):
+        with patch.object(recomendacoes_service, "get_mercado_status", return_value={"rodada_atual": 7}), patch.object(
+            recomendacoes_service,
+            "get_pontuados_por_rodada",
+            return_value={"atletas": {}},
+        ) as mock_pontuados:
+            rodada_atual, rodadas_consideradas, cache = recomendacoes_service._precarregar_cache_historico_misto(5)
+
+        self.assertEqual(rodada_atual, 7)
+        self.assertEqual(rodadas_consideradas, 5)
+        self.assertEqual(len(cache), 5)
+        self.assertEqual(mock_pontuados.call_count, 5)
 
 
 class RecomendacoesRouteTestCase(unittest.TestCase):

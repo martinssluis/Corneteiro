@@ -1,5 +1,5 @@
 from app.services.cartola_parciais_service import get_pontuados, get_pontuados_por_rodada
-from app.services.cartola_service import get_atletas_mercado
+from app.services.cartola_service import get_atletas_mercado, get_mercado_status
 from app.services.historico_service import get_historico_atleta
 from app.services.pontuacao_service import calcular_pontuacao_por_scout
 
@@ -64,7 +64,29 @@ def _extrair_pontuacoes_validas(historico: list[dict]) -> list[float]:
     return pontuacoes
 
 
-def _montar_candidato_misto(atleta: dict, rodadas: int) -> dict | None:
+def _precarregar_cache_historico_misto(rodadas: int) -> tuple[int | None, int, dict[int, dict]]:
+    mercado = get_mercado_status()
+    rodada_atual = mercado.get("rodada_atual")
+
+    if not rodada_atual:
+        return None, rodadas, {}
+
+    rodadas_consideradas = max(1, min(int(rodadas), rodada_atual))
+    rodada_inicial = max(1, rodada_atual - rodadas_consideradas + 1)
+
+    pontuados_por_rodada = {}
+    for rodada in range(rodada_inicial, rodada_atual + 1):
+        pontuados_por_rodada[rodada] = get_pontuados_por_rodada(rodada)
+
+    return rodada_atual, rodadas_consideradas, pontuados_por_rodada
+
+
+def _montar_candidato_misto(
+    atleta: dict,
+    rodadas: int,
+    rodada_atual: int | None = None,
+    pontuados_por_rodada: dict[int, dict] | None = None,
+) -> dict | None:
     preco = atleta.get("preco_num")
     media = atleta.get("media_num")
 
@@ -77,7 +99,12 @@ def _montar_candidato_misto(atleta: dict, rodadas: int) -> dict | None:
     if preco <= 0:
         return None
 
-    historico_atleta = get_historico_atleta(atleta_id=atleta.get("atleta_id"), rodadas=rodadas)
+    historico_atleta = get_historico_atleta(
+        atleta_id=atleta.get("atleta_id"),
+        rodadas=rodadas,
+        rodada_atual=rodada_atual,
+        pontuados_por_rodada=pontuados_por_rodada,
+    )
     historico = historico_atleta.get("historico", [])
     pontuacoes_validas = _extrair_pontuacoes_validas(historico)
 
@@ -323,14 +350,21 @@ def recomendacao_mista(posicao_id: int | None = None, limite: int = 10, rodadas:
     if posicao_id is not None:
         atletas = [atleta for atleta in atletas if atleta.get("posicao_id") == posicao_id]
 
+    rodada_atual, rodadas_consideradas, pontuados_por_rodada = _precarregar_cache_historico_misto(rodadas)
+
     candidatos = []
     for atleta in atletas:
-        candidato = _montar_candidato_misto(atleta, rodadas)
+        candidato = _montar_candidato_misto(
+            atleta,
+            rodadas_consideradas,
+            rodada_atual=rodada_atual,
+            pontuados_por_rodada=pontuados_por_rodada,
+        )
         if candidato is None:
             continue
         candidatos.append(candidato)
 
-    recomendacoes = _aplicar_scores_mistos(candidatos, rodadas)
+    recomendacoes = _aplicar_scores_mistos(candidatos, rodadas_consideradas)
 
     limite = max(1, min(int(limite), 50))
     recomendacoes = recomendacoes[:limite]
@@ -338,7 +372,7 @@ def recomendacao_mista(posicao_id: int | None = None, limite: int = 10, rodadas:
     return {
         "criterio": "misto",
         "perfil": "equilibrado",
-        "rodadas": rodadas,
+        "rodadas": rodadas_consideradas,
         "posicao_id": posicao_id,
         "limite": limite,
         "quantidade": len(recomendacoes),
