@@ -39,7 +39,3 @@ instance/
 
 # Arquivos do Flask
 instance/
-
-# Arquivos de configuração
-.agents/
-skills-lock.json
