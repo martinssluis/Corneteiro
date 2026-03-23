@@ -10,7 +10,7 @@ from app.utils.erros import resposta_erro
 
 recomendacoes_bp = Blueprint("recomendacoes", __name__)
 
-CRITERIOS_SUPORTADOS = {"custo_beneficio", "destaques_rodada", "misto"}
+CRITERIOS_SUPORTADOS = {"custo_beneficio", "destaques_rodada", "misto", "confronto_hibrido"}
 ORDENACOES_DESTAQUES = {"pontuacao_cartola", "pontuacao_calculada"}
 
 
@@ -23,34 +23,62 @@ def listar_recomendacoes():
     rodadas = request.args.get("rodadas", default=5, type=int)
     rodada = request.args.get("rodada", type=int)
     ordenar_por = request.args.get("ordenar_por", default="pontuacao_cartola", type=str)
+    janela_curta = request.args.get("janela_curta", default=5, type=int)
+    janela_longa = request.args.get("janela_longa", default=10, type=int)
+    peso_curta = request.args.get("peso_curta", default=0.7, type=float)
+    peso_longa = request.args.get("peso_longa", default=0.3, type=float)
 
     if not criterio:
         return resposta_erro(
-            "Parâmetro 'criterio' é obrigatório. Use 'custo_beneficio', 'destaques_rodada' ou 'misto'.",
+            "Parametro 'criterio' e obrigatorio. Use 'custo_beneficio', 'destaques_rodada', 'misto' ou 'confronto_hibrido'.",
             status=400,
         )
 
     if criterio not in CRITERIOS_SUPORTADOS:
         return resposta_erro(
-            "Parâmetro 'criterio' inválido. Use 'custo_beneficio', 'destaques_rodada' ou 'misto'.",
+            "Parametro 'criterio' invalido. Use 'custo_beneficio', 'destaques_rodada', 'misto' ou 'confronto_hibrido'.",
             status=400,
         )
 
     if limite <= 0 or limite > 50:
         return resposta_erro(
-            "Parâmetro 'limite' inválido. Use um valor entre 1 e 50.",
+            "Parametro 'limite' invalido. Use um valor entre 1 e 50.",
             status=400,
         )
 
     if rodadas <= 0 or rodadas > 38:
         return resposta_erro(
-            "Parâmetro 'rodadas' inválido. Use um valor entre 1 e 38.",
+            "Parametro 'rodadas' invalido. Use um valor entre 1 e 38.",
+            status=400,
+        )
+
+    if janela_curta <= 0 or janela_curta > 38:
+        return resposta_erro(
+            "Parametro 'janela_curta' invalido. Use um valor entre 1 e 38.",
+            status=400,
+        )
+
+    if janela_longa <= 0 or janela_longa > 38:
+        return resposta_erro(
+            "Parametro 'janela_longa' invalido. Use um valor entre 1 e 38.",
+            status=400,
+        )
+
+    if peso_curta < 0 or peso_curta > 1 or peso_longa < 0 or peso_longa > 1:
+        return resposta_erro(
+            "Parametros de peso invalidos. Use valores entre 0 e 1.",
+            status=400,
+        )
+
+    if abs((peso_curta + peso_longa) - 1.0) > 0.001:
+        return resposta_erro(
+            "A soma de 'peso_curta' e 'peso_longa' deve ser 1.0.",
             status=400,
         )
 
     if ordenar_por not in ORDENACOES_DESTAQUES:
         return resposta_erro(
-            "Parâmetro 'ordenar_por' inválido. Use 'pontuacao_cartola' ou 'pontuacao_calculada'.",
+            "Parametro 'ordenar_por' invalido. Use 'pontuacao_cartola' ou 'pontuacao_calculada'.",
             status=400,
         )
 
@@ -61,6 +89,10 @@ def listar_recomendacoes():
         rodadas=rodadas,
         rodada=rodada,
         ordenar_por=ordenar_por,
+        janela_curta=janela_curta,
+        janela_longa=janela_longa,
+        peso_curta=peso_curta,
+        peso_longa=peso_longa,
     )
     return jsonify(resultado)
 
@@ -72,7 +104,7 @@ def custo_beneficio():
 
     if limite <= 0 or limite > 50:
         return resposta_erro(
-            "Parâmetro 'limite' inválido. Use um valor entre 1 e 50.",
+            "Parametro 'limite' invalido. Use um valor entre 1 e 50.",
             status=400
         )
 
@@ -92,13 +124,13 @@ def destaques_rodada():
 
     if limite <= 0 or limite > 50:
         return resposta_erro(
-            "Parâmetro 'limite' inválido. Use um valor entre 1 e 50.",
+            "Parametro 'limite' invalido. Use um valor entre 1 e 50.",
             status=400
         )
 
     if ordenar_por not in ORDENACOES_DESTAQUES:
         return resposta_erro(
-            "Parâmetro 'ordenar_por' inválido. Use 'pontuacao_cartola' ou 'pontuacao_calculada'.",
+            "Parametro 'ordenar_por' invalido. Use 'pontuacao_cartola' ou 'pontuacao_calculada'.",
             status=400
         )
 
