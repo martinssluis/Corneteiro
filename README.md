@@ -11,7 +11,7 @@ O projeto expõe endpoints para:
 - visualizar pontuacoes por rodada
 - analisar historico recente de um atleta
 - calcular tendencia de desempenho
-- gerar recomendacoes por diferentes criterios, incluindo o criterio `misto`
+- gerar recomendacoes por diferentes criterios, incluindo `misto` e `confronto_hibrido`
 
 ## Tecnologias
 
@@ -139,6 +139,7 @@ Esse arquivo pode ser:
 - `GET /recomendacoes?criterio=custo_beneficio`
 - `GET /recomendacoes?criterio=destaques_rodada`
 - `GET /recomendacoes?criterio=misto`
+- `GET /recomendacoes?criterio=confronto_hibrido`
 
 Endpoints legados:
 
