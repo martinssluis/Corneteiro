@@ -1,6 +1,5 @@
 import unicodedata
 import requests
-import requests
 from flask import current_app
 
 def get_mercado_status():
@@ -64,6 +63,15 @@ def buscar_atletas_por_nome(nome: str, exato: bool = False):
 def get_atletas_mercado():
     base = current_app.config.get("CARTOLA_API_URL", "https://api.cartola.globo.com")
     url = f"{base}/atletas/mercado"
+
+    resp = requests.get(url, timeout=10)
+    resp.raise_for_status()
+    return resp.json()
+
+
+def get_partidas_por_rodada(rodada: int):
+    base = current_app.config.get("CARTOLA_API_URL", "https://api.cartola.globo.com")
+    url = f"{base}/partidas/{rodada}"
 
     resp = requests.get(url, timeout=10)
     resp.raise_for_status()
