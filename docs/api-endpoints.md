@@ -344,6 +344,7 @@ Exemplos:
 GET /recomendacoes?criterio=custo_beneficio
 GET /recomendacoes?criterio=destaques_rodada&rodada=10
 GET /recomendacoes?criterio=misto&rodadas=5&limite=10&posicao_id=2
+GET /recomendacoes?criterio=confronto_hibrido&janela_curta=5&janela_longa=10&peso_curta=0.7&peso_longa=0.3&limite=10&posicao_id=2
 ```
 
 Parametros gerais:
@@ -357,6 +358,7 @@ Criterios suportados:
 - `custo_beneficio`
 - `destaques_rodada`
 - `misto`
+- `confronto_hibrido`
 
 ### `criterio=custo_beneficio`
 
@@ -372,7 +374,10 @@ Informacoes obtidas:
 - `atleta_id`
 - `apelido`
 - `clube_id`
+- `clube_nome`
+- `clube_sigla`
 - `posicao_id`
+- `posicao_nome`
 - `preco_num`
 - `media_num`
 - `indice_custo_beneficio`
@@ -420,7 +425,10 @@ Para cada recomendacao:
 - `atleta_id`
 - `apelido`
 - `clube_id`
+- `clube_nome`
+- `clube_sigla`
 - `posicao_id`
+- `posicao_nome`
 - `preco_num`
 - `media_num`
 - `partidas_validas`
@@ -429,6 +437,56 @@ Para cada recomendacao:
 - `score_consistencia`
 - `score_custo_beneficio`
 - `penalizacao_amostra`
+- `score_recomendacao`
+
+### `criterio=confronto_hibrido`
+
+Ranking que combina momento individual do atleta com contexto do confronto da rodada.
+
+Parametros extras:
+
+- `janela_curta`: opcional, padrao `5`, intervalo `1..38`
+- `janela_longa`: opcional, padrao `10`, intervalo `1..38`
+- `peso_curta`: opcional, padrao `0.7`, intervalo `0..1`
+- `peso_longa`: opcional, padrao `0.3`, intervalo `0..1`
+
+Regras:
+
+- `peso_curta + peso_longa` deve ser igual a `1.0`
+- historico do confronto considera recorte por posicao do atleta
+
+Informacoes obtidas:
+
+- `criterio`
+- `janela_curta`
+- `janela_longa`
+- `peso_curta`
+- `peso_longa`
+- `posicao_id`
+- `limite`
+- `quantidade`
+- lista `recomendacoes`
+
+Para cada recomendacao:
+
+- `atleta_id`
+- `apelido`
+- `clube_id`
+- `clube_nome`
+- `clube_sigla`
+- `posicao_id`
+- `posicao_nome`
+- `adversario_id`
+- `adversario_nome`
+- `adversario_sigla`
+- `preco_num`
+- `media_num`
+- `historico_time_curto`
+- `historico_time_longo`
+- `score_individual`
+- `score_confronto_curto`
+- `score_confronto_longo`
+- `forca_confronto`
 - `score_recomendacao`
 
 ### Endpoints legados de recomendacao
@@ -482,7 +540,13 @@ GET /recomendacoes?criterio=custo_beneficio&posicao_id=2&limite=10
 GET /recomendacoes?criterio=misto&posicao_id=2&rodadas=5&limite=10
 ```
 
-3. Comparar com destaques de rodada:
+3. Ver confronto hibrido da rodada:
+
+```http
+GET /recomendacoes?criterio=confronto_hibrido&posicao_id=2&janela_curta=5&janela_longa=10&peso_curta=0.7&peso_longa=0.3&limite=10
+```
+
+4. Comparar com destaques de rodada:
 
 ```http
 GET /recomendacoes?criterio=destaques_rodada&rodada=10&limite=10
