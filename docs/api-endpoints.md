@@ -345,6 +345,8 @@ GET /recomendacoes?criterio=custo_beneficio
 GET /recomendacoes?criterio=destaques_rodada&rodada=10
 GET /recomendacoes?criterio=misto&rodadas=5&limite=10&posicao_id=2
 GET /recomendacoes?criterio=confronto_hibrido&janela_curta=5&janela_longa=10&peso_curta=0.7&peso_longa=0.3&limite=10&posicao_id=2
+GET /recomendacoes?criterio=valorizacao&limite=10&posicao_id=2
+GET /recomendacoes?criterio=valorizacao&limite=10&posicao_id=2&preco_max=10
 ```
 
 Parametros gerais:
@@ -359,6 +361,7 @@ Criterios suportados:
 - `destaques_rodada`
 - `misto`
 - `confronto_hibrido`
+- `valorizacao`
 
 ### `criterio=custo_beneficio`
 
@@ -489,6 +492,53 @@ Para cada recomendacao:
 - `forca_confronto`
 - `score_recomendacao`
 
+### `criterio=valorizacao`
+
+Ranking para foco em valorizacao de patrimonio do time.
+
+Regra usada:
+
+- `pontos_minimos_valorizacao = preco_num * 0.45`
+- `pontos_projetados = media_num`
+- `folga_valorizacao = pontos_projetados - pontos_minimos_valorizacao`
+
+Comportamento:
+
+- recomenda apenas atletas que atingem o minimo de valorizacao (`folga_valorizacao >= 0`)
+- ordena por maior `folga_valorizacao`
+- quando `preco_max` e informado, considera apenas atletas com `preco_num <= preco_max`
+
+Parametros extras:
+
+- `preco_max`: opcional, teto de cartoletas para considerar no ranking (valor maior que `0`)
+
+Informacoes obtidas:
+
+- `criterio`
+- `formula_minima`
+- `preco_max`
+- `posicao_id`
+- `limite`
+- `quantidade`
+- lista `recomendacoes`
+
+Para cada recomendacao:
+
+- `atleta_id`
+- `apelido`
+- `clube_id`
+- `clube_nome`
+- `clube_sigla`
+- `posicao_id`
+- `posicao_nome`
+- `preco_num`
+- `media_num`
+- `fator_valorizacao`
+- `pontos_minimos_valorizacao`
+- `pontos_projetados`
+- `folga_valorizacao`
+- `atinge_minimo_valorizacao`
+
 ### Endpoints legados de recomendacao
 
 Os endpoints abaixo continuam disponiveis:
@@ -550,4 +600,16 @@ GET /recomendacoes?criterio=confronto_hibrido&posicao_id=2&janela_curta=5&janela
 
 ```http
 GET /recomendacoes?criterio=destaques_rodada&rodada=10&limite=10
+```
+
+5. Buscar valorizacao de patrimonio:
+
+```http
+GET /recomendacoes?criterio=valorizacao&posicao_id=2&limite=10
+```
+
+Com teto de cartoletas:
+
+```http
+GET /recomendacoes?criterio=valorizacao&posicao_id=2&limite=10&preco_max=10
 ```

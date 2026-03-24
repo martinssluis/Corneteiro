@@ -6,6 +6,88 @@ from app.services import recomendacoes_service
 
 
 class RecomendacoesServiceTestCase(unittest.TestCase):
+    def test_recomendacao_valorizacao_filtra_e_ordena_por_folga(self):
+        atletas = {
+            "atletas": [
+                {
+                    "atleta_id": 1,
+                    "apelido": "Valorizador A",
+                    "clube_id": 10,
+                    "posicao_id": 2,
+                    "preco_num": 10.0,
+                    "media_num": 6.0,
+                },
+                {
+                    "atleta_id": 2,
+                    "apelido": "Valorizador B",
+                    "clube_id": 20,
+                    "posicao_id": 2,
+                    "preco_num": 12.0,
+                    "media_num": 7.0,
+                },
+                {
+                    "atleta_id": 3,
+                    "apelido": "Nao Valoriza",
+                    "clube_id": 30,
+                    "posicao_id": 2,
+                    "preco_num": 20.0,
+                    "media_num": 5.0,
+                },
+            ]
+        }
+
+        with patch.object(recomendacoes_service, "get_atletas_mercado", return_value=atletas), patch.object(
+            recomendacoes_service,
+            "_carregar_clubes_seguro",
+            return_value={
+                10: {"nome": "Clube A", "abreviacao": "CLA"},
+                20: {"nome": "Clube B", "abreviacao": "CLB"},
+                30: {"nome": "Clube C", "abreviacao": "CLC"},
+            },
+        ):
+            resultado = recomendacoes_service.recomendacao_valorizacao(posicao_id=2, limite=10)
+
+        self.assertEqual(resultado["criterio"], "valorizacao")
+        self.assertEqual(resultado["quantidade"], 2)
+        self.assertEqual(resultado["recomendacoes"][0]["atleta_id"], 1)
+        self.assertEqual(resultado["recomendacoes"][1]["atleta_id"], 2)
+        self.assertTrue(resultado["recomendacoes"][0]["atinge_minimo_valorizacao"])
+        self.assertAlmostEqual(resultado["recomendacoes"][0]["pontos_minimos_valorizacao"], 4.5)
+        self.assertAlmostEqual(resultado["recomendacoes"][0]["folga_valorizacao"], 1.5)
+
+    def test_recomendacao_valorizacao_aplica_preco_max(self):
+        atletas = {
+            "atletas": [
+                {
+                    "atleta_id": 1,
+                    "apelido": "Ate 10",
+                    "clube_id": 10,
+                    "posicao_id": 2,
+                    "preco_num": 10.0,
+                    "media_num": 6.0,
+                },
+                {
+                    "atleta_id": 2,
+                    "apelido": "Acima de 10",
+                    "clube_id": 20,
+                    "posicao_id": 2,
+                    "preco_num": 11.0,
+                    "media_num": 8.0,
+                },
+            ]
+        }
+
+        with patch.object(recomendacoes_service, "get_atletas_mercado", return_value=atletas), patch.object(
+            recomendacoes_service,
+            "_carregar_clubes_seguro",
+            return_value={10: {"nome": "Clube A", "abreviacao": "CLA"}, 20: {"nome": "Clube B", "abreviacao": "CLB"}},
+        ):
+            resultado = recomendacoes_service.recomendacao_valorizacao(posicao_id=2, limite=10, preco_max=10.0)
+
+        self.assertEqual(resultado["quantidade"], 1)
+        self.assertEqual(resultado["preco_max"], 10.0)
+        self.assertEqual(resultado["recomendacoes"][0]["atleta_id"], 1)
+
     def test_recomendacao_mista_ordena_e_aplica_penalizacao(self):
         atletas = {
             "atletas": [
@@ -372,6 +454,25 @@ class RecomendacoesRouteTestCase(unittest.TestCase):
 
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.get_json()["criterio"], "confronto_hibrido")
+        mock_recomendacao.assert_called_once()
+
+    def test_get_recomendacoes_aceita_criterio_valorizacao(self):
+        payload = {
+            "criterio": "valorizacao",
+            "formula_minima": "pontos_minimos_valorizacao = preco_num * 0.45",
+            "preco_max": 10.0,
+            "posicao_id": None,
+            "limite": 10,
+            "quantidade": 0,
+            "recomendacoes": [],
+        }
+
+        with patch("app.routes.recomendacoes_routes.recomendacao_por_criterio", return_value=payload) as mock_recomendacao:
+            response = self.client.get("/recomendacoes?criterio=valorizacao&limite=10&preco_max=10")
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.get_json()["criterio"], "valorizacao")
+        self.assertEqual(mock_recomendacao.call_args.kwargs["preco_max"], 10.0)
         mock_recomendacao.assert_called_once()
 
 

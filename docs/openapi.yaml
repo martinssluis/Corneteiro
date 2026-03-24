@@ -338,7 +338,7 @@ paths:
           required: true
           schema:
             type: string
-            enum: [custo_beneficio, destaques_rodada, misto]
+            enum: [custo_beneficio, destaques_rodada, misto, confronto_hibrido, valorizacao]
         - in: query
           name: posicao_id
           required: false
@@ -372,6 +372,12 @@ paths:
             type: string
             enum: [pontuacao_cartola, pontuacao_calculada]
             default: pontuacao_cartola
+        - in: query
+          name: preco_max
+          required: false
+          schema:
+            type: number
+            minimum: 0.01
       responses:
         "200":
           description: Ranking de recomendacoes conforme o criterio informado
@@ -382,6 +388,8 @@ paths:
                   - $ref: "#/components/schemas/RecomendacaoCustoBeneficioResponse"
                   - $ref: "#/components/schemas/RecomendacaoDestaquesResponse"
                   - $ref: "#/components/schemas/RecomendacaoMistaResponse"
+                  - $ref: "#/components/schemas/RecomendacaoConfrontoHibridoResponse"
+                  - $ref: "#/components/schemas/RecomendacaoValorizacaoResponse"
         "400":
           $ref: "#/components/responses/ErrorResponse"
   /recomendacoes/custo-beneficio:
@@ -672,3 +680,125 @@ components:
           type: array
           items:
             $ref: "#/components/schemas/RecomendacaoMistaItem"
+    RecomendacaoConfrontoHibridoItem:
+      type: object
+      properties:
+        atleta_id:
+          type: integer
+        apelido:
+          type: string
+          nullable: true
+        clube_id:
+          type: integer
+          nullable: true
+        clube_nome:
+          type: string
+          nullable: true
+        clube_sigla:
+          type: string
+          nullable: true
+        posicao_id:
+          type: integer
+          nullable: true
+        posicao_nome:
+          type: string
+          nullable: true
+        adversario_id:
+          type: integer
+          nullable: true
+        adversario_nome:
+          type: string
+          nullable: true
+        adversario_sigla:
+          type: string
+          nullable: true
+        preco_num:
+          type: number
+        media_num:
+          type: number
+        score_recomendacao:
+          type: number
+    RecomendacaoConfrontoHibridoResponse:
+      type: object
+      properties:
+        criterio:
+          type: string
+          enum: [confronto_hibrido]
+        janela_curta:
+          type: integer
+        janela_longa:
+          type: integer
+        peso_curta:
+          type: number
+        peso_longa:
+          type: number
+        posicao_id:
+          type: integer
+          nullable: true
+        limite:
+          type: integer
+        quantidade:
+          type: integer
+        recomendacoes:
+          type: array
+          items:
+            $ref: "#/components/schemas/RecomendacaoConfrontoHibridoItem"
+    RecomendacaoValorizacaoItem:
+      type: object
+      properties:
+        atleta_id:
+          type: integer
+        apelido:
+          type: string
+          nullable: true
+        clube_id:
+          type: integer
+          nullable: true
+        clube_nome:
+          type: string
+          nullable: true
+        clube_sigla:
+          type: string
+          nullable: true
+        posicao_id:
+          type: integer
+          nullable: true
+        posicao_nome:
+          type: string
+          nullable: true
+        preco_num:
+          type: number
+        media_num:
+          type: number
+        fator_valorizacao:
+          type: number
+        pontos_minimos_valorizacao:
+          type: number
+        pontos_projetados:
+          type: number
+        folga_valorizacao:
+          type: number
+        atinge_minimo_valorizacao:
+          type: boolean
+    RecomendacaoValorizacaoResponse:
+      type: object
+      properties:
+        criterio:
+          type: string
+          enum: [valorizacao]
+        formula_minima:
+          type: string
+        preco_max:
+          type: number
+          nullable: true
+        posicao_id:
+          type: integer
+          nullable: true
+        limite:
+          type: integer
+        quantidade:
+          type: integer
+        recomendacoes:
+          type: array
+          items:
+            $ref: "#/components/schemas/RecomendacaoValorizacaoItem"

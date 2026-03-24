@@ -10,7 +10,7 @@ from app.utils.erros import resposta_erro
 
 recomendacoes_bp = Blueprint("recomendacoes", __name__)
 
-CRITERIOS_SUPORTADOS = {"custo_beneficio", "destaques_rodada", "misto", "confronto_hibrido"}
+CRITERIOS_SUPORTADOS = {"custo_beneficio", "destaques_rodada", "misto", "confronto_hibrido", "valorizacao"}
 ORDENACOES_DESTAQUES = {"pontuacao_cartola", "pontuacao_calculada"}
 
 
@@ -27,16 +27,17 @@ def listar_recomendacoes():
     janela_longa = request.args.get("janela_longa", default=10, type=int)
     peso_curta = request.args.get("peso_curta", default=0.7, type=float)
     peso_longa = request.args.get("peso_longa", default=0.3, type=float)
+    preco_max = request.args.get("preco_max", type=float)
 
     if not criterio:
         return resposta_erro(
-            "Parametro 'criterio' e obrigatorio. Use 'custo_beneficio', 'destaques_rodada', 'misto' ou 'confronto_hibrido'.",
+            "Parametro 'criterio' e obrigatorio. Use 'custo_beneficio', 'destaques_rodada', 'misto', 'confronto_hibrido' ou 'valorizacao'.",
             status=400,
         )
 
     if criterio not in CRITERIOS_SUPORTADOS:
         return resposta_erro(
-            "Parametro 'criterio' invalido. Use 'custo_beneficio', 'destaques_rodada', 'misto' ou 'confronto_hibrido'.",
+            "Parametro 'criterio' invalido. Use 'custo_beneficio', 'destaques_rodada', 'misto', 'confronto_hibrido' ou 'valorizacao'.",
             status=400,
         )
 
@@ -76,6 +77,12 @@ def listar_recomendacoes():
             status=400,
         )
 
+    if preco_max is not None and preco_max <= 0:
+        return resposta_erro(
+            "Parametro 'preco_max' invalido. Use um valor maior que 0.",
+            status=400,
+        )
+
     if ordenar_por not in ORDENACOES_DESTAQUES:
         return resposta_erro(
             "Parametro 'ordenar_por' invalido. Use 'pontuacao_cartola' ou 'pontuacao_calculada'.",
@@ -93,6 +100,7 @@ def listar_recomendacoes():
         janela_longa=janela_longa,
         peso_curta=peso_curta,
         peso_longa=peso_longa,
+        preco_max=preco_max,
     )
     return jsonify(resultado)
 

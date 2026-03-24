@@ -12,6 +12,7 @@ PESO_CUSTO_BENEFICIO = 0.2
 
 PESO_SCORE_INDIVIDUAL = 0.6
 PESO_FORCA_CONFRONTO = 0.4
+FATOR_VALORIZACAO = 0.45
 
 
 def _clamp(valor: float, minimo: float, maximo: float) -> float:
@@ -339,6 +340,7 @@ def recomendacao_por_criterio(
     janela_longa: int = 10,
     peso_curta: float = 0.7,
     peso_longa: float = 0.3,
+    preco_max: float | None = None,
 ) -> dict:
     criterio_normalizado = (criterio or "").strip().lower()
 
@@ -365,6 +367,9 @@ def recomendacao_por_criterio(
             peso_curta=peso_curta,
             peso_longa=peso_longa,
         )
+
+    if criterio_normalizado == "valorizacao":
+        return recomendacao_valorizacao(posicao_id=posicao_id, limite=limite, preco_max=preco_max)
 
     raise ValueError("criterio_invalido")
 
@@ -670,6 +675,76 @@ def recomendacao_confronto_hibrido(
         "janela_longa": rodadas_longa_consideradas,
         "peso_curta": _arredondar(peso_curta),
         "peso_longa": _arredondar(peso_longa),
+        "posicao_id": posicao_id,
+        "limite": limite,
+        "quantidade": len(recomendacoes),
+        "recomendacoes": recomendacoes,
+    }
+
+
+def recomendacao_valorizacao(posicao_id: int | None = None, limite: int = 10, preco_max: float | None = None) -> dict:
+    data = get_atletas_mercado()
+    atletas = data.get("atletas", [])
+
+    if posicao_id is not None:
+        atletas = [atleta for atleta in atletas if atleta.get("posicao_id") == posicao_id]
+
+    if preco_max is not None:
+        atletas_filtrados = []
+        for atleta in atletas:
+            preco_num = _safe_float(atleta.get("preco_num"))
+            if preco_num is None:
+                continue
+            if preco_num <= preco_max:
+                atletas_filtrados.append(atleta)
+        atletas = atletas_filtrados
+
+    clubes = _carregar_clubes_seguro()
+    recomendacoes = []
+
+    for atleta in atletas:
+        preco_num = _safe_float(atleta.get("preco_num"))
+        media_num = _safe_float(atleta.get("media_num"))
+
+        if preco_num is None or preco_num <= 0 or media_num is None:
+            continue
+
+        pontos_minimos_valorizacao = preco_num * FATOR_VALORIZACAO
+        pontos_projetados = media_num
+        folga_valorizacao = pontos_projetados - pontos_minimos_valorizacao
+        atinge_minimo_valorizacao = folga_valorizacao >= 0
+
+        item = {
+            "atleta_id": atleta.get("atleta_id"),
+            "apelido": atleta.get("apelido"),
+            "clube_id": atleta.get("clube_id"),
+            "posicao_id": atleta.get("posicao_id"),
+            "preco_num": _arredondar(preco_num),
+            "media_num": _arredondar(media_num),
+            "fator_valorizacao": FATOR_VALORIZACAO,
+            "pontos_minimos_valorizacao": _arredondar(pontos_minimos_valorizacao),
+            "pontos_projetados": _arredondar(pontos_projetados),
+            "folga_valorizacao": _arredondar(folga_valorizacao),
+            "atinge_minimo_valorizacao": atinge_minimo_valorizacao,
+        }
+        recomendacoes.append(_enriquecer_identidade(item, clubes))
+
+    recomendacoes = [item for item in recomendacoes if item["atinge_minimo_valorizacao"]]
+    recomendacoes.sort(
+        key=lambda item: (
+            item["folga_valorizacao"],
+            item["pontos_projetados"],
+        ),
+        reverse=True,
+    )
+
+    limite = max(1, min(int(limite), 50))
+    recomendacoes = recomendacoes[:limite]
+
+    return {
+        "criterio": "valorizacao",
+        "formula_minima": "pontos_minimos_valorizacao = preco_num * 0.45",
+        "preco_max": _arredondar(preco_max) if preco_max is not None else None,
         "posicao_id": posicao_id,
         "limite": limite,
         "quantidade": len(recomendacoes),
