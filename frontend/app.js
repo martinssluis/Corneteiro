@@ -153,26 +153,28 @@
   const RECO_CRITERIOS = {
     custo_beneficio: {
       titulo: "Custo-benefício",
-      descricao: "Média por cartoleta (media_num / preco_num).",
+      descricao:
+        "Ranqueia atletas pela relação entre pontuação média e preço. Quanto maior o índice (média ÷ preço), melhor o retorno por cartoleta — ideal para montar um time eficiente sem gastar muito.",
     },
     destaques_rodada: {
       titulo: "Destaques da rodada",
-      descricao: "Melhores pontuados da rodada atual ou selecionada.",
+      descricao:
+        "Lista os atletas que mais pontuaram em uma rodada específica ou na rodada atual. Útil para identificar quem está em momento quente e repetindo boas atuações recentes.",
     },
     misto: {
       titulo: "Misto",
       descricao:
-        "Score ponderado: 50% fase recente + 30% consistência + 20% custo-benefício.",
+        "Combina três fatores em um score único: 50% fase recente (últimas rodadas), 30% consistência (regularidade histórica) e 20% custo-benefício. É a recomendação mais equilibrada para quem quer uma visão completa.",
     },
     confronto_hibrido: {
       titulo: "Confronto híbrido",
       descricao:
-        "Combina forma individual com vulnerabilidade do adversário (janelas curta e longa).",
+        "Leva em conta tanto a forma individual do atleta quanto a vulnerabilidade do adversário na sua posição. Usa duas janelas de tempo (curta e longa) para equilibrar resultados recentes e histórico — recomendado para escalações táticas.",
     },
     valorizacao: {
       titulo: "Valorização",
       descricao:
-        "Atletas cuja projeção supera o mínimo para valorizar (preço × 0,45), ordenados pela folga relativa ao preço.",
+        "Foca em atletas com potencial de valorizar no mercado do Cartola. Seleciona quem tem projeção de pontos acima do mínimo necessário para valorizar (preço × 0,45), ordenados pela maior margem relativa ao preço.",
     },
   };
 
@@ -182,6 +184,15 @@
     qsa("#reco-form [data-show-for]").forEach((el) => {
       el.style.display = el.dataset.showFor === criterioAtual ? "flex" : "none";
     });
+    const criterio = RECO_CRITERIOS[criterioAtual];
+    const infoEl = qs("#reco-criterio-info");
+    const tituloEl = qs("#reco-criterio-titulo");
+    const descEl = qs("#reco-criterio-desc");
+    if (criterio && infoEl && tituloEl && descEl) {
+      tituloEl.textContent = criterio.titulo;
+      descEl.textContent = criterio.descricao;
+      infoEl.classList.remove("hidden");
+    }
   }
 
   function setupRecoTabs() {
