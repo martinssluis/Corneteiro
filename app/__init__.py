@@ -1,12 +1,29 @@
-from flask import Flask
+import os
+from flask import Flask, send_from_directory
 from .config import Config
 import requests
 from .utils.erros import resposta_erro
 
+FRONTEND_DIR = os.path.abspath(
+    os.path.join(os.path.dirname(__file__), os.pardir, "frontend")
+)
+
+
 def create_app():
-    app = Flask(__name__)
+    app = Flask(
+        __name__,
+        static_folder=FRONTEND_DIR,
+        static_url_path="/static",
+    )
     app.config.from_object(Config)
 
+    @app.route("/")
+    def serve_frontend_index():
+        return send_from_directory(FRONTEND_DIR, "index.html")
+
+    @app.route("/assets/<path:filename>")
+    def serve_frontend_assets(filename):
+        return send_from_directory(FRONTEND_DIR, filename)
 
     from .routes.mercado_routers import mercado_bp
     from .routes.atletas_routers import atleta_bp
@@ -32,7 +49,7 @@ def create_app():
 
     @app.errorhandler(404)
     def handle_404(e):
-        return resposta_erro("Recurso não encontrado", status=404)
+        return resposta_erro("Recurso nao encontrado", status=404)
 
     @app.errorhandler(500)
     def handle_500(e):
