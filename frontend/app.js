@@ -153,26 +153,28 @@
   const RECO_CRITERIOS = {
     custo_beneficio: {
       titulo: "Custo-benefício",
-      descricao: "Média por cartoleta (media_num / preco_num).",
+      descricao:
+        "Encontra atletas com a melhor relação entre pontuação média e preço. Ideal para montar um time competitivo sem gastar muitas cartoletas.",
     },
     destaques_rodada: {
       titulo: "Destaques da rodada",
-      descricao: "Melhores pontuados da rodada atual ou selecionada.",
+      descricao:
+        "Lista os atletas que mais pontuaram em uma rodada específica. Bom para identificar quem está em boa fase e repetir escalações vencedoras.",
     },
     misto: {
       titulo: "Misto",
       descricao:
-        "Score ponderado: 50% fase recente + 30% consistência + 20% custo-benefício.",
+        "Combina forma recente, consistência e custo-benefício num único score. Equilibra desempenho com regularidade — boa escolha para quem busca atletas confiáveis a longo prazo.",
     },
     confronto_hibrido: {
       titulo: "Confronto híbrido",
       descricao:
-        "Combina forma individual com vulnerabilidade do adversário (janelas curta e longa).",
+        "Leva em conta o desempenho individual do atleta e o quão vulnerável é o adversário da próxima rodada. Ideal para explorar confrontos favoráveis e maximizar pontos na rodada.",
     },
     valorizacao: {
       titulo: "Valorização",
       descricao:
-        "Atletas cuja projeção supera o mínimo para valorizar (preço × 0,45), ordenados pela folga relativa ao preço.",
+        "Seleciona atletas com alta probabilidade de valorizar no mercado após a rodada. Perfeito para quem quer aumentar o patrimônio da equipe comprando antes da alta.",
     },
   };
 
@@ -182,6 +184,11 @@
     qsa("#reco-form [data-show-for]").forEach((el) => {
       el.style.display = el.dataset.showFor === criterioAtual ? "flex" : "none";
     });
+  }
+
+  function atualizarDescricaoCriterio() {
+    const el = qs("#reco-criterio-descricao");
+    if (el) el.textContent = RECO_CRITERIOS[criterioAtual]?.descricao ?? "";
   }
 
   function setupRecoTabs() {
@@ -195,9 +202,11 @@
           )
         );
         atualizarFiltrosCriterio();
+        atualizarDescricaoCriterio();
       });
     });
     atualizarFiltrosCriterio();
+    atualizarDescricaoCriterio();
   }
 
   function paramsDoForm() {
