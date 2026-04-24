@@ -713,6 +713,7 @@ def recomendacao_valorizacao(posicao_id: int | None = None, limite: int = 10, pr
         pontos_projetados = media_num
         folga_valorizacao = pontos_projetados - pontos_minimos_valorizacao
         atinge_minimo_valorizacao = folga_valorizacao >= 0
+        percentual_valorizacao = folga_valorizacao / preco_num
 
         item = {
             "atleta_id": atleta.get("atleta_id"),
@@ -725,6 +726,7 @@ def recomendacao_valorizacao(posicao_id: int | None = None, limite: int = 10, pr
             "pontos_minimos_valorizacao": _arredondar(pontos_minimos_valorizacao),
             "pontos_projetados": _arredondar(pontos_projetados),
             "folga_valorizacao": _arredondar(folga_valorizacao),
+            "percentual_valorizacao": _arredondar(percentual_valorizacao),
             "atinge_minimo_valorizacao": atinge_minimo_valorizacao,
         }
         recomendacoes.append(_enriquecer_identidade(item, clubes))
@@ -732,6 +734,7 @@ def recomendacao_valorizacao(posicao_id: int | None = None, limite: int = 10, pr
     recomendacoes = [item for item in recomendacoes if item["atinge_minimo_valorizacao"]]
     recomendacoes.sort(
         key=lambda item: (
+            item["percentual_valorizacao"],
             item["folga_valorizacao"],
             item["pontos_projetados"],
         ),
