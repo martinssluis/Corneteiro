@@ -39,3 +39,7 @@ instance/
 
 # Arquivos do Flask
 instance/
+
+.claude/
+.agents/
+.mcp.json
