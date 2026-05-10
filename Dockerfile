@@ -9,8 +9,8 @@ COPY app/ app/
 COPY frontend/ frontend/
 COPY run.py .
 
-EXPOSE 5000
+EXPOSE 8080
 
 ENV FLASK_ENV=production
 
-CMD ["gunicorn", "--workers", "4", "--bind", "0.0.0.0:5000", "run:app"]
+CMD ["gunicorn", "--workers", "4", "--bind", "0.0.0.0:8080", "run:app"]
