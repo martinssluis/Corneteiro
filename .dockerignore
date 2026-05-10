@@ -1,0 +1,13 @@
+venv/
+.env
+.git/
+.claude/
+.agents/
+docs/
+tests/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.mcp.json
+skills-lock.json
